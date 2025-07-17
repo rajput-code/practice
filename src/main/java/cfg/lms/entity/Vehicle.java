@@ -11,6 +11,7 @@ import lombok.*;
 public class Vehicle {
     @Id @GeneratedValue
     private Long vehicleId;
+    @Column(unique = true, nullable = false)
     private String licensePlate;
     private String type;
 
