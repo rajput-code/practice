@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor@Table(schema="VehicleManagement",name="Vuser")
 public class User {
-    @Id @GeneratedValue
+    @Id 
     private Long userId;
     private String name;
     @Column(unique = true)

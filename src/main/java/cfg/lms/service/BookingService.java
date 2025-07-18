@@ -22,38 +22,57 @@ public class BookingService {
     private final VehicleRepository vehicleRepository;
 
     public String bookSlot(Long userId, String vehicleType, String licensePlate, LocalDateTime start, LocalDateTime end) {
-        List<Booking> overlappingBookings = bookingRepository.findOverlappingBookings(start, end);
-        int maxSlots = 100;
+        // Validate time range
+        if (end.isBefore(start)) {
+            return "Invalid time range: end time is before start time.";
+        }
 
+        // Check if user already has a booking in the selected timeframe
+        List<Booking> userBookings = bookingRepository.findUserOverlappingBookings(userId, start, end);
+        if (!userBookings.isEmpty()) {
+            return "User already has a booking in this time frame.";
+        }
+
+        // Check if total overlapping bookings exceed slot limit
+        List<Booking> overlappingBookings = bookingRepository.findOverlappingBookings(start, end);
+        int maxSlots = 10;
         if (overlappingBookings.size() >= maxSlots) {
             return "No available slot for selected time.";
         }
 
-        List<ParkingSlot> available = slotRepository.findByStatus("AVAILABLE");
+        // Find or create a parking slot
         ParkingSlot slot;
-
+        List<ParkingSlot> available = slotRepository.findByStatus("AVAILABLE");
         if (available.isEmpty()) {
             slot = new ParkingSlot();
-            slot.setStatus("BOOKED");
-            slotRepository.save(slot);
         } else {
             slot = available.get(0);
-            slot.setStatus("BOOKED");
-            slotRepository.save(slot);
         }
 
+        slot.setStatus("BOOKED");
+        slot.setType(vehicleType.toUpperCase());
+        slotRepository.save(slot);
+
+        // Generate unique random 4-digit booking ID
+        long bookingId;
+        do {
+            bookingId = 1000 + (long) (Math.random() * 9000);
+        } while (bookingRepository.existsByBookingId(bookingId));
+
+        // Create and save booking
         Booking booking = new Booking();
+        booking.setBookingId(bookingId);
         booking.setUser(userRepository.findById(userId)
             .orElseThrow(() -> new RuntimeException("User not found")));
         booking.setSlot(slot);
         booking.setStartTime(start);
         booking.setEndTime(end);
-
-        // ✅ Fix: Set vehicle
         booking.setVehicle(vehicleRepository.findByLicensePlate(licensePlate)
-        	    .orElseThrow(() -> new RuntimeException("Vehicle not found")));
+            .orElseThrow(() -> new RuntimeException("Vehicle not found")));
+
         bookingRepository.save(booking);
 
+        // Calculate fare
         long hours = java.time.Duration.between(start, end).toHours();
         if (hours <= 0) hours = 1;
 
@@ -65,8 +84,10 @@ public class BookingService {
 
         double totalFare = rate * hours;
 
-        return "Slot booked successfully for " + hours + " hour(s).\n" +
+        return "Slot booked successfully! \n" +
+               "Booking ID: " + booking.getBookingId() + "\n" +
                "Vehicle: " + vehicleType.toUpperCase() + "\n" +
+               "Total Hours: " + hours + "\n" +
                "Total Fare: ₹" + totalFare;
     }
 }

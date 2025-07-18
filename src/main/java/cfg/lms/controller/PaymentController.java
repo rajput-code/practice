@@ -22,12 +22,28 @@ public class PaymentController {
 
     private final PaymentRepository paymentRepository;
     private final BookingRepository bookingRepository;
+    private final PaymentService paymentService;
 
     @PostMapping("/pay")
     public ResponseEntity<String> makePayment(@RequestBody PaymentRequest request) {
         Booking booking = bookingRepository.findById(request.getBookingId())
             .orElseThrow(() -> new RuntimeException("Booking not found"));
 
+        if (paymentRepository.existsByBooking(booking)) {
+            return ResponseEntity.ok("User already paid for the above Booking ID: " + request.getBookingId());
+        }
+
+
+		// Calculate the correct fare
+        double expectedAmount = paymentService.calculateFare(booking);
+
+        // Validate payment amount
+        if (Double.compare(request.getAmount(), expectedAmount) != 0) {
+            return ResponseEntity.badRequest().body(
+                "Incorrect amount. Please pay the exact fare of ₹" + expectedAmount);
+        }
+
+        // Proceed with payment
         Payment payment = new Payment();
         payment.setBooking(booking);
         payment.setAmount(request.getAmount());
@@ -35,6 +51,6 @@ public class PaymentController {
 
         paymentRepository.save(payment);
 
-        return ResponseEntity.ok("Payment successful for Booking ID: " + request.getBookingId());
+        return ResponseEntity.ok("Payment successfully completed for Booking ID: " + request.getBookingId());
     }
 }

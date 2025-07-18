@@ -6,5 +6,5 @@ import org.springframework.stereotype.Repository;
 import cfg.lms.entity.Report;
 @Repository
 public interface ReportRepository extends JpaRepository<Report, Long> {
-	
+	boolean existsByUserUserId(Long userId);
 }

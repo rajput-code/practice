@@ -19,6 +19,12 @@ public class ReportController {
 
     @PostMapping("/submit")
     public ResponseEntity<String> submitReport(@RequestBody ReportRequest request) {
+       
+        if (reportRepository.existsByUserUserId(request.getUserId())) {
+            return ResponseEntity.ok("Report already submitted for this user ID: " + request.getUserId());
+        }
+
+        
         Report report = new Report();
         report.setDescription(request.getDescription());
         report.setUser(userRepository.findById(request.getUserId())
@@ -29,4 +35,3 @@ public class ReportController {
         return ResponseEntity.ok("Report submitted successfully.");
     }
 }
-

@@ -14,15 +14,18 @@ public class PaymentService {
     private final PaymentRepository paymentRepository;
     private final BookingRepository bookingRepository;
 
-    public String makePayment(Long bookingId, Double amount) {
-        Booking booking = bookingRepository.findById(bookingId).orElseThrow();
+    public double calculateFare(Booking booking) {
+        long hours = java.time.Duration.between(booking.getStartTime(), booking.getEndTime()).toHours();
+        if (hours <= 0) hours = 1;
 
-        Payment payment = new Payment();
-        payment.setBooking(booking);
-        payment.setAmount(amount);
-        payment.setStatus("PAID");
+        String vehicleType = booking.getVehicle().getType().toUpperCase();
 
-        paymentRepository.save(payment);
-        return "Payment successful.";
+        double rate = switch (vehicleType) {
+            case "CAR" -> 50;
+            case "BIKE" -> 30;
+            default -> throw new IllegalArgumentException("Invalid vehicle type: " + vehicleType);
+        };
+
+        return rate * hours;
     }
 }

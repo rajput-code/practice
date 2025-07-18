@@ -9,5 +9,10 @@ import cfg.lms.entity.Vehicle;
 
 @Repository
 public interface VehicleRepository extends JpaRepository<Vehicle, Long> {
-	Optional<Vehicle> findByLicensePlate(String licensePlate);
+
+    Optional<Vehicle> findByUserUserIdAndLicensePlate(Long userId, String licensePlate);
+
+    boolean existsByVehicleId(Long vehicleId);
+
+    Optional<Vehicle> findByLicensePlate(String licensePlate);
 }
