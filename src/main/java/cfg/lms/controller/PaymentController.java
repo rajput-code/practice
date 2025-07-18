@@ -25,32 +25,49 @@ public class PaymentController {
     private final PaymentService paymentService;
 
     @PostMapping("/pay")
-    public ResponseEntity<String> makePayment(@RequestBody PaymentRequest request) {
-        Booking booking = bookingRepository.findById(request.getBookingId())
-            .orElseThrow(() -> new RuntimeException("Booking not found"));
+    public ResponseEntity<ResponseData> makePayment(@RequestBody PaymentRequest request) {
+        ResponseData response = new ResponseData();
 
-        if (paymentRepository.existsByBooking(booking)) {
-            return ResponseEntity.ok("User already paid for the above Booking ID: " + request.getBookingId());
+        try {
+            Booking booking = bookingRepository.findById(request.getBookingId())
+                    .orElseThrow(() -> new RuntimeException("Booking not found"));
+
+            if (paymentRepository.existsByBooking(booking)) {
+                response.setStatus("ERROR");
+                response.setMessage("User already paid for the Booking ID: " + request.getBookingId());
+                response.setData(null);
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            // Calculate fare
+            double expectedAmount = paymentService.calculateFare(booking);
+
+            // Validate amount
+            if (Double.compare(request.getAmount(), expectedAmount) != 0) {
+                response.setStatus("ERROR");
+                response.setMessage("Incorrect amount. Please pay the exact fare of ₹" + expectedAmount);
+                response.setData(null);
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            // Proceed with payment
+            Payment payment = new Payment();
+            payment.setBooking(booking);
+            payment.setAmount(request.getAmount());
+            payment.setStatus(request.getStatus() != null ? request.getStatus() : "PAID");
+
+            Payment saved = paymentRepository.save(payment);
+
+            response.setStatus("SUCCESS");
+            response.setMessage("Payment completed for Booking ID: " + request.getBookingId());
+            response.setData(saved);
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            response.setStatus("ERROR");
+            response.setMessage("Payment failed: " + e.getMessage());
+            response.setData(null);
+            return ResponseEntity.internalServerError().body(response);
         }
-
-
-		// Calculate the correct fare
-        double expectedAmount = paymentService.calculateFare(booking);
-
-        // Validate payment amount
-        if (Double.compare(request.getAmount(), expectedAmount) != 0) {
-            return ResponseEntity.badRequest().body(
-                "Incorrect amount. Please pay the exact fare of ₹" + expectedAmount);
-        }
-
-        // Proceed with payment
-        Payment payment = new Payment();
-        payment.setBooking(booking);
-        payment.setAmount(request.getAmount());
-        payment.setStatus(request.getStatus() != null ? request.getStatus() : "PAID");
-
-        paymentRepository.save(payment);
-
-        return ResponseEntity.ok("Payment successfully completed for Booking ID: " + request.getBookingId());
     }
 }

@@ -13,6 +13,7 @@ import lombok.NoArgsConstructor;
 public class User {
     @Id 
     private Long userId;
+    
     private String name;
     @Column(unique = true)
     private String email;

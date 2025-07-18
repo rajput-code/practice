@@ -1,12 +1,14 @@
 package cfg.lms.dto;
 
+import java.time.LocalDateTime;
+
 import lombok.Data;
 
 @Data
 public class BookingRequest {
-    private Long userId;
+	private Long userId;
     private String vehicleType;
     private String licensePlate;
-    private String start;
-    private String end;
+    private LocalDateTime start;
+    private LocalDateTime end;
 }

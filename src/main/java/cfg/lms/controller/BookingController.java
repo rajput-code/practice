@@ -2,6 +2,7 @@ package cfg.lms.controller;
 
 import java.time.LocalDateTime;
 
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -21,15 +22,19 @@ public class BookingController {
     private final BookingService bookingService;
 
     @PostMapping("/book")
-    public ResponseEntity<String> book(@RequestBody BookingRequest request) {
-        return ResponseEntity.ok(
-            bookingService.bookSlot(
-                request.getUserId(),
-                request.getVehicleType(),
-                request.getLicensePlate(),
-                LocalDateTime.parse(request.getStart()),
-                LocalDateTime.parse(request.getEnd())
-            )
+    public ResponseEntity<ResponseData> bookSlot(@RequestBody BookingRequest request) {
+        ResponseData response = bookingService.bookSlot(
+            request.getUserId(),
+            request.getVehicleType(),
+            request.getLicensePlate(),
+            request.getStart(),
+            request.getEnd()
         );
+
+        if ("SUCCESS".equals(response.getStatus())) {
+            return ResponseEntity.ok(response);
+        } else {
+            return ResponseEntity.badRequest().body(response);
+        }
     }
 }

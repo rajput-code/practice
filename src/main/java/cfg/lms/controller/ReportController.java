@@ -18,20 +18,34 @@ public class ReportController {
     private final UserRepository userRepository;
 
     @PostMapping("/submit")
-    public ResponseEntity<String> submitReport(@RequestBody ReportRequest request) {
-       
-        if (reportRepository.existsByUserUserId(request.getUserId())) {
-            return ResponseEntity.ok("Report already submitted for this user ID: " + request.getUserId());
+    public ResponseEntity<ResponseData> submitReport(@RequestBody ReportRequest request) {
+        ResponseData response = new ResponseData();
+
+        try {
+            if (reportRepository.existsByUserUserId(request.getUserId())) {
+                response.setStatus("ERROR");
+                response.setMessage("Report already submitted for this user ID: " + request.getUserId());
+                response.setData(null);
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            Report report = new Report();
+            report.setDescription(request.getDescription());
+            report.setUser(userRepository.findById(request.getUserId())
+                .orElseThrow(() -> new RuntimeException("User not found")));
+
+            Report savedReport = reportRepository.save(report);
+
+            response.setStatus("SUCCESS");
+            response.setMessage("Report submitted successfully.");
+            response.setData(savedReport);
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            response.setStatus("ERROR");
+            response.setMessage("Report submission failed: " + e.getMessage());
+            response.setData(null);
+            return ResponseEntity.internalServerError().body(response);
         }
-
-        
-        Report report = new Report();
-        report.setDescription(request.getDescription());
-        report.setUser(userRepository.findById(request.getUserId())
-            .orElseThrow(() -> new RuntimeException("User not found")));
-
-        reportRepository.save(report);
-
-        return ResponseEntity.ok("Report submitted successfully.");
     }
 }

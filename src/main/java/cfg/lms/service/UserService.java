@@ -2,6 +2,7 @@ package cfg.lms.service;
 
 import org.springframework.stereotype.Service;
 
+import cfg.lms.controller.ResponseData;
 import cfg.lms.entity.User;
 import cfg.lms.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -12,23 +13,34 @@ public class UserService {
 
     private final UserRepository userRepository;
 
-    public String register(User user) {
+    public ResponseData register(User user) {
+        ResponseData response = new ResponseData();
+
         try {
-            return userRepository.findByEmail(user.getEmail())
-                .map(existingUser -> "User is already registered with User ID: " + existingUser.getUserId())
-                .orElseGet(() -> {
-                    long randomId;
-                    do {
-                    	 randomId = 1000 + (long)(Math.random() * 900); // Generates a number between 0 and 999999
-                    } while (userRepository.existsById(randomId)); // Ensure uniqueness
+            if (userRepository.findByEmail(user.getEmail()).isPresent()) {
+                response.setStatus("ERROR");
+                response.setMessage("User already registered with this email.");
+                response.setData(null);
+            } else {
+                long randomId;
+                do {
+                    randomId = 1000 + (long)(Math.random() * 9000); // e.g. 1000–9999
+                } while (userRepository.existsById(randomId));
 
-                    user.setUserId(randomId);
-                    User savedUser = userRepository.save(user);
-                    return "User registered successfully with User ID: " + savedUser.getUserId();
-                });
+                user.setUserId(randomId);
+                User savedUser = userRepository.save(user);
 
+                response.setStatus("SUCCESS");
+                response.setMessage("User registered successfully with User ID: " + savedUser.getUserId());
+                response.setData(savedUser);
+            }
         } catch (Exception e) {
-            return "An error occurred during registration: " + e.getMessage();
+            response.setStatus("ERROR");
+            response.setMessage("Registration failed: " + e.getMessage());
+            response.setData(null);
         }
+
+        return response;
     }
 }
+

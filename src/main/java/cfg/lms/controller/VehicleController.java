@@ -20,31 +20,46 @@ public class VehicleController {
     private final UserRepository userRepository;
 
     @PostMapping("/register")
-    public ResponseEntity<String> registerVehicle(@RequestBody VehicleRequest request) {
-        User user = userRepository.findById(request.getUserId())
-            .orElseThrow(() -> new RuntimeException("User not found"));
+    public ResponseEntity<ResponseData> registerVehicle(@RequestBody VehicleRequest request) {
+        ResponseData response = new ResponseData();
 
-        Optional<Vehicle> existingVehicle = vehicleRepository
-            .findByUserUserIdAndLicensePlate(request.getUserId(), request.getLicensePlate());
+        try {
+            User user = userRepository.findById(request.getUserId())
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
-        if (existingVehicle.isPresent()) {
-            return ResponseEntity.ok("Vehicle is already registered with Vehicle ID: " +
-                    existingVehicle.get().getVehicleId());
+            Optional<Vehicle> existingVehicle = vehicleRepository
+                .findByUserUserIdAndLicensePlate(request.getUserId(), request.getLicensePlate());
+
+            if (existingVehicle.isPresent()) {
+                response.setStatus("ERROR");
+                response.setMessage("Vehicle already registered with Vehicle ID: " + existingVehicle.get().getVehicleId());
+                response.setData(existingVehicle.get());
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            long vehicleId;
+            do {
+                vehicleId = 1000 + (long)(Math.random() * 9000);
+            } while (vehicleId == request.getUserId() || vehicleRepository.existsByVehicleId(vehicleId));
+
+            Vehicle vehicle = new Vehicle();
+            vehicle.setVehicleId(vehicleId);
+            vehicle.setUser(user);
+            vehicle.setLicensePlate(request.getLicensePlate());
+            vehicle.setType(request.getVehicleType());
+
+            Vehicle savedVehicle = vehicleRepository.save(vehicle);
+
+            response.setStatus("SUCCESS");
+            response.setMessage("Vehicle registered successfully with Vehicle ID: " + savedVehicle.getVehicleId());
+            response.setData(savedVehicle);
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            response.setStatus("ERROR");
+            response.setMessage("Vehicle registration failed: " + e.getMessage());
+            response.setData(null);
+            return ResponseEntity.internalServerError().body(response);
         }
-
-        // Generate unique 4-digit vehicle ID different from user ID
-        long vehicleId;
-        do {
-            vehicleId = 1000 + (long)(Math.random() * 9000);
-        } while (vehicleId == request.getUserId() || vehicleRepository.existsByVehicleId(vehicleId));
-
-        Vehicle vehicle = new Vehicle();
-        vehicle.setVehicleId(vehicleId);
-        vehicle.setUser(user);
-        vehicle.setLicensePlate(request.getLicensePlate());
-        vehicle.setType(request.getVehicleType());
-
-        Vehicle savedVehicle = vehicleRepository.save(vehicle);
-        return ResponseEntity.ok("Vehicle registered successfully with Vehicle ID: " + savedVehicle.getVehicleId());
     }
 }

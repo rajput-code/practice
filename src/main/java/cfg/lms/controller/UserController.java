@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import cfg.lms.entity.User;
+import cfg.lms.repository.UserRepository;
 import cfg.lms.service.UserService;
 import lombok.RequiredArgsConstructor;
 
@@ -14,10 +15,14 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/user")
 @RequiredArgsConstructor
 public class UserController {
+
     private final UserService userService;
 
     @PostMapping("/register")
-    public ResponseEntity<String> register(@RequestBody User user) {
-        return ResponseEntity.ok(userService.register(user));
+    public ResponseEntity<ResponseData> register(@RequestBody User user) {
+        ResponseData response = userService.register(user);
+        return response.getStatus().equalsIgnoreCase("SUCCESS")
+            ? ResponseEntity.ok(response)
+            : ResponseEntity.badRequest().body(response);
     }
 }
