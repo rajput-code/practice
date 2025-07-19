@@ -39,10 +39,10 @@ public class PaymentController {
                 return ResponseEntity.badRequest().body(response);
             }
 
-            // Calculate fare
+            
             double expectedAmount = paymentService.calculateFare(booking);
 
-            // Validate amount
+          
             if (Double.compare(request.getAmount(), expectedAmount) != 0) {
                 response.setStatus("ERROR");
                 response.setMessage("Incorrect amount. Please pay the exact fare of ₹" + expectedAmount);
@@ -50,7 +50,7 @@ public class PaymentController {
                 return ResponseEntity.badRequest().body(response);
             }
 
-            // Proceed with payment
+            
             Payment payment = new Payment();
             payment.setBooking(booking);
             payment.setAmount(request.getAmount());

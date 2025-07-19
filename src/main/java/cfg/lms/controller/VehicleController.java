@@ -5,6 +5,7 @@ import cfg.lms.entity.User;
 import cfg.lms.entity.Vehicle;
 import cfg.lms.repository.UserRepository;
 import cfg.lms.repository.VehicleRepository;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,12 +21,12 @@ public class VehicleController {
     private final UserRepository userRepository;
 
     @PostMapping("/register")
-    public ResponseEntity<ResponseData> registerVehicle(@RequestBody VehicleRequest request) {
+    public ResponseEntity<ResponseData> registerVehicle(@Valid @RequestBody VehicleRequest request) {
         ResponseData response = new ResponseData();
 
         try {
             User user = userRepository.findById(request.getUserId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
             Optional<Vehicle> existingVehicle = vehicleRepository
                 .findByUserUserIdAndLicensePlate(request.getUserId(), request.getLicensePlate());
@@ -55,11 +56,13 @@ public class VehicleController {
             response.setData(savedVehicle);
             return ResponseEntity.ok(response);
 
+        } catch (IllegalArgumentException e) {
+            response.setStatus("ERROR");
+            response.setMessage(e.getMessage());
+            return ResponseEntity.badRequest().body(response);
         } catch (Exception e) {
             response.setStatus("ERROR");
             response.setMessage("Vehicle registration failed: " + e.getMessage());
-            response.setData(null);
             return ResponseEntity.internalServerError().body(response);
         }
-    }
-}
+    }}

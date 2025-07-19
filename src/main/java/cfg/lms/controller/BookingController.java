@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import cfg.lms.dto.BookingRequest;
 import cfg.lms.service.BookingService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -22,7 +23,7 @@ public class BookingController {
     private final BookingService bookingService;
 
     @PostMapping("/book")
-    public ResponseEntity<ResponseData> bookSlot(@RequestBody BookingRequest request) {
+    public ResponseEntity<ResponseData> bookSlot(@Valid @RequestBody BookingRequest request) {
         ResponseData response = bookingService.bookSlot(
             request.getUserId(),
             request.getVehicleType(),
@@ -38,3 +39,4 @@ public class BookingController {
         }
     }
 }
+

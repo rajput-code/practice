@@ -19,50 +19,104 @@ public class AdminController {
     private final ParkingSlotRepository slotRepository;
     private final BookingRepository bookingRepository;
     private final PaymentRepository paymentRepository;
+    private final ReportRepository reportRepository;
 
-    // View all users
     @GetMapping("/users")
-    public ResponseEntity<List<User>> getAllUsers() {
-        return ResponseEntity.ok(userRepository.findAll());
+    public ResponseEntity<ResponseData> getAllUsers() {
+        List<User> users = userRepository.findAll();
+        return buildSuccessResponse("Users fetched successfully", users);
     }
 
-    // View all vehicles
     @GetMapping("/vehicles")
-    public ResponseEntity<List<Vehicle>> getAllVehicles() {
-        return ResponseEntity.ok(vehicleRepository.findAll());
+    public ResponseEntity<ResponseData> getAllVehicles() {
+        List<Vehicle> vehicles = vehicleRepository.findAll();
+        return buildSuccessResponse("Vehicles fetched successfully", vehicles);
     }
 
-    // View all parking slots
     @GetMapping("/slots")
-    public ResponseEntity<List<ParkingSlot>> getAllSlots() {
-        return ResponseEntity.ok(slotRepository.findAll());
+    public ResponseEntity<ResponseData> getAllSlots() {
+        List<ParkingSlot> slots = slotRepository.findAll();
+        return buildSuccessResponse("Parking slots fetched successfully", slots);
     }
 
-    // View all bookings
     @GetMapping("/bookings")
-    public ResponseEntity<List<Booking>> getAllBookings() {
-        return ResponseEntity.ok(bookingRepository.findAll());
+    public ResponseEntity<ResponseData> getAllBookings() {
+        List<Booking> bookings = bookingRepository.findAll();
+        return buildSuccessResponse("Bookings fetched successfully", bookings);
     }
 
-    // View all payments
     @GetMapping("/payments")
-    public ResponseEntity<List<Payment>> getAllPayments() {
-        return ResponseEntity.ok(paymentRepository.findAll());
+    public ResponseEntity<ResponseData> getAllPayments() {
+        List<Payment> payments = paymentRepository.findAll();
+        return buildSuccessResponse("Payments fetched successfully", payments);
+    }
+    
+    @GetMapping("/reports")
+    public ResponseEntity<ResponseData> getAllReports() {
+        List<Report> reports = reportRepository.findAll();
+        return buildSuccessResponse("Reports fetched successfully", reports);
     }
 
-    // Update parking slot status (example: manually release a booked slot)
     @PutMapping("/slot/{id}/status")
-    public ResponseEntity<String> updateSlotStatus(@PathVariable Long id, @RequestParam String status) {
-        ParkingSlot slot = slotRepository.findById(id).orElseThrow(() -> new RuntimeException("Slot not found"));
-        slot.setStatus(status.toUpperCase());
-        slotRepository.save(slot);
-        return ResponseEntity.ok("Slot status updated to: " + status.toUpperCase());
+    public ResponseEntity<ResponseData> updateSlotStatus(@PathVariable Long id, @RequestParam String status) {
+        try {
+            ParkingSlot slot = slotRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Slot not found"));
+            slot.setStatus(status.toUpperCase());
+            slotRepository.save(slot);
+            return buildSuccessResponse("Slot status updated successfully", slot);
+        } catch (Exception e) {
+            return buildErrorResponse("Failed to update slot status: " + e.getMessage());
+        }
     }
 
-    // Delete a booking (admin override)
     @DeleteMapping("/booking/{id}")
-    public ResponseEntity<String> deleteBooking(@PathVariable Long id) {
-        bookingRepository.deleteById(id);
-        return ResponseEntity.ok("Booking deleted by admin.");
+    public ResponseEntity<ResponseData> deleteBooking(@PathVariable Long id) {
+        try {
+            bookingRepository.deleteById(id);
+            return buildSuccessResponse("Booking deleted by admin.", null);
+        } catch (Exception e) {
+            return buildErrorResponse("Failed to delete booking: " + e.getMessage());
+        }
+    }
+    @DeleteMapping("/payment/{paymentId}")
+    public ResponseEntity<ResponseData> deletePayment(@PathVariable Long paymentId) {
+        ResponseData response = new ResponseData();
+
+        if (!paymentRepository.existsById(paymentId)) {
+            response.setStatus("ERROR");
+            response.setMessage("Payment with ID " + paymentId + " not found.");
+            return ResponseEntity.badRequest().body(response);
+        }
+
+        try {
+            paymentRepository.deleteById(paymentId);
+            response.setStatus("SUCCESS");
+            response.setMessage("Payment with ID " + paymentId + " deleted successfully.");
+            response.setData(null);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.setStatus("ERROR");
+            response.setMessage("Failed to delete payment: " + e.getMessage());
+            response.setData(null);
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    
+    private ResponseEntity<ResponseData> buildSuccessResponse(String message, Object data) {
+        ResponseData response = new ResponseData();
+        response.setStatus("SUCCESS");
+        response.setMessage(message);
+        response.setData(data);
+        return ResponseEntity.ok(response);
+    }
+
+    private ResponseEntity<ResponseData> buildErrorResponse(String errorMessage) {
+        ResponseData response = new ResponseData();
+        response.setStatus("ERROR");
+        response.setMessage(errorMessage);
+        response.setData(null);
+        return ResponseEntity.badRequest().body(response);
     }
 }
