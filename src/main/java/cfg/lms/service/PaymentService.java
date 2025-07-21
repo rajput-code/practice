@@ -3,17 +3,13 @@ package cfg.lms.service;
 import org.springframework.stereotype.Service;
 
 import cfg.lms.entity.Booking;
-import cfg.lms.entity.Payment;
-import cfg.lms.repository.BookingRepository;
-import cfg.lms.repository.PaymentRepository;
+
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
 public class PaymentService {
-    private final PaymentRepository paymentRepository;
-    private final BookingRepository bookingRepository;
-
+    
     public double calculateFare(Booking booking) {
         long hours = java.time.Duration.between(booking.getStartTime(), booking.getEndTime()).toHours();
         if (hours <= 0) hours = 1;

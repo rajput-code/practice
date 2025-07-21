@@ -45,7 +45,7 @@ public class PaymentServiceTest {
         booking.setEndTime(booking.getStartTime().plusHours(2));
 
         double fare = paymentService.calculateFare(booking);
-        assertEquals(100.0, fare); // 2 * 50
+        assertEquals(100.0, fare); 
     }
 
     @Test
@@ -55,7 +55,7 @@ public class PaymentServiceTest {
         booking.setEndTime(booking.getStartTime().plusHours(3));
 
         double fare = paymentService.calculateFare(booking);
-        assertEquals(90.0, fare); // 3 * 30
+        assertEquals(90.0, fare); 
     }
 
     @Test
@@ -65,22 +65,21 @@ public class PaymentServiceTest {
         booking.setEndTime(booking.getStartTime());
 
         double fare = paymentService.calculateFare(booking);
-        assertEquals(50.0, fare); // Minimum 1 hour
+        assertEquals(50.0, fare); 
     }
 
     @Test
     public void testCalculateFare_Bike_NegativeDuration_MinimumOneHourCharged() {
         vehicle.setType("BIKE");
         booking.setStartTime(LocalDateTime.now());
-        booking.setEndTime(booking.getStartTime().minusHours(1)); // Invalid time
-
+        booking.setEndTime(booking.getStartTime().minusHours(1)); 
         double fare = paymentService.calculateFare(booking);
-        assertEquals(30.0, fare); // Still charges minimum
+        assertEquals(30.0, fare); 
     }
 
     @Test
     public void testCalculateFare_InvalidVehicleType_ShouldThrowException() {
-        vehicle.setType("TRUCK"); // Not supported
+        vehicle.setType("TRUCK");
         booking.setStartTime(LocalDateTime.now());
         booking.setEndTime(booking.getStartTime().plusHours(2));
 

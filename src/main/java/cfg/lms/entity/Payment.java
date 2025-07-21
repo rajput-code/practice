@@ -16,5 +16,5 @@ public class Payment {
     private Booking booking;
 
     private Double amount;
-    private String status; // PAID, PENDING
+    private String status; 
 }

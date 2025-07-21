@@ -21,12 +21,12 @@ public class UserService {
     private final UserRepository userRepository;
 
     public ResponseData register(@Valid User user) {
-        // Check if user exists
+       
         if (userRepository.findByEmail(user.getEmail()).isPresent()) {
             throw new UserAlreadyExistsException("User already registered with this email.");
         }
 
-        // Generate unique user ID
+       
         long randomId;
         do {
             randomId = 1000 + (long)(Math.random() * 9000);
@@ -35,7 +35,7 @@ public class UserService {
         user.setUserId(randomId);
         User savedUser = userRepository.save(user);
 
-        // Return structured success response
+      
         return new ResponseData("SUCCESS",
                 "User registered successfully with User ID: " + savedUser.getUserId(),
                 savedUser);

@@ -2,8 +2,6 @@ package cfg.lms.controller;
 
 import cfg.lms.entity.User;
 import cfg.lms.service.UserService;
-import cfg.lms.controller.ResponseData;
-import cfg.lms.entity.User;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

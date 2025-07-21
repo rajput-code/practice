@@ -4,7 +4,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import cfg.lms.dto.PaymentRequest;
@@ -13,8 +12,9 @@ import cfg.lms.entity.Payment;
 import cfg.lms.repository.BookingRepository;
 import cfg.lms.repository.PaymentRepository;
 import cfg.lms.service.PaymentService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-
+ 
 @RestController
 @RequestMapping("/payment")
 @RequiredArgsConstructor
@@ -24,8 +24,9 @@ public class PaymentController {
     private final BookingRepository bookingRepository;
     private final PaymentService paymentService;
 
-    @PostMapping("/pay")
-    public ResponseEntity<ResponseData> makePayment(@RequestBody PaymentRequest request) {
+
+@PostMapping("/pay")
+public ResponseEntity<ResponseData> makePayment(@Valid @RequestBody PaymentRequest request) {
         ResponseData response = new ResponseData();
 
         try {

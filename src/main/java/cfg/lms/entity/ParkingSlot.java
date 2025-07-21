@@ -12,5 +12,5 @@ public class ParkingSlot {
     @Id @GeneratedValue
     private Long slotId;
     private String type;
-    private String status; // AVAILABLE, BOOKED
+    private String status; 
 }

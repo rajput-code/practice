@@ -30,14 +30,14 @@ public class BookingService {
         ResponseData response = new ResponseData();
 
         try {
-            // Validate time range
+         
             if (end.isBefore(start)) {
                 response.setStatus("ERROR");
                 response.setMessage("Invalid time range: end time is before start time.");
                 return response;
             }
 
-            // Check for existing user bookings
+            
             List<Booking> userBookings = bookingRepository.findUserOverlappingBookings(userId, start, end);
             if (!userBookings.isEmpty()) {
                 response.setStatus("ERROR");
@@ -45,7 +45,7 @@ public class BookingService {
                 return response;
             }
 
-            // Check if slots are full
+         
             List<Booking> overlappingBookings = bookingRepository.findOverlappingBookings(start, end);
             int maxSlots = 10;
             if (overlappingBookings.size() >= maxSlots) {
@@ -54,11 +54,11 @@ public class BookingService {
                 return response;
             }
 
-            // Get available slot
+         
             ParkingSlot slot;
             List<ParkingSlot> available = slotRepository.findByStatus("AVAILABLE");
             if (available.isEmpty()) {
-                slot = new ParkingSlot(); // fallback if none exist
+                slot = new ParkingSlot(); 
             } else {
                 slot = available.get(0);
             }
@@ -67,13 +67,13 @@ public class BookingService {
             slot.setType(vehicleType.toUpperCase());
             slotRepository.save(slot);
 
-            // Generate unique booking ID
+         
             long bookingId;
             do {
                 bookingId = 1000 + (long) (Math.random() * 9000);
             } while (bookingRepository.existsByBookingId(bookingId));
 
-            // Save booking
+          
             Booking booking = new Booking();
             booking.setBookingId(bookingId);
             booking.setUser(userRepository.findById(userId)
@@ -86,7 +86,7 @@ public class BookingService {
 
             bookingRepository.save(booking);
 
-            // Calculate fare
+          
             long hours = java.time.Duration.between(start, end).toHours();
             if (hours <= 0) hours = 1;
 
